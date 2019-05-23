@@ -5,7 +5,39 @@ import sys
 def query(query_string, language="en"):
     json_response = requests.get("https://www.googleapis.com/books/v1/volumes?q={}&order_by=relevance&langRestrict=en".format(query_string.replace(" ", "+")))
     results = json.loads(json_response.text)
-    return results
+    result = results["items"][0]["volumeInfo"]
+    return result
+
+def parse_results(result, verbosity=0):
+    if verbosity == 0:
+        isbn = result["industryIdentifiers"][0]["identifier"]
+        title = result["title"] + " - " + result["subtitle"]
+        if len(result["authors"]) > 1:
+            author = ", ".join(result["authors"])
+        else:
+            author = result["authors"][0]
+        publisher = result["publisher"]
+        cover = result["imageLinks"]["thumbnail"]
+        if len(result["categories"]) > 1:
+            topic = " & ".join(result["categories"])
+        else:
+            topic = result["categories"][0]
+        release_date = result["publishedDate"]
+        language = result["language"]
+        clean_result = {
+            "isbn": isbn,
+            "title": title,
+            "author": author,
+            "publisher": publisher,
+            "cover": cover,
+            "topic": topic,
+            "release_date": release_date,
+            "language": language
+        }
+        return clean_result
+
+    elif verbosity == 1:
+        return result
 
 def get_options(string):
     options_string = string.replace("-", "")
@@ -60,7 +92,7 @@ def switch_multiple_options(options):
         input_path, output_path = check_for_paths(options)
         #print("[DEBUG] Read inputs from " + input_path + " and write to output file " + output_path + " with verbosity " + str(verbosity_level))
         inputs = read_inputs(input_path)
-        results = execute_queries(inputs, verbosity=1)
+        results = execute_queries(inputs, verbosity=verbosity_level)
         write_outputs(results, output_path)
         exit()
     return
@@ -68,7 +100,7 @@ def switch_multiple_options(options):
 def switch_options(options):
     if len(options) > 1:
         switch_multiple_options(options)
-        
+
     first_options = get_options(options[0])
     check_validity(first_options)
     
@@ -80,11 +112,9 @@ def switch_options(options):
     if "c" in first_options:
         try:
             #print("[DEBUG] Execute query: " + options[1] + " with verbosity " + str(verbosity_level))
-            results = execute_query(options[1])
-            if verbosity_level == 1:
-                results = parse_results(results)
-            else:
-                print(results)
+            results = query(options[1])
+            results = parse_results(results, verbosity_level)
+            print(results)
             exit()
         except IndexError:
             display_error("Missing bookname.")
