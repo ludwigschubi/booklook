@@ -1,6 +1,7 @@
 import requests
 import json
 import sys
+import os
 
 def query(query_string, language="en"):
     json_response = requests.get("https://www.googleapis.com/books/v1/volumes?q={}&order_by=relevance&langRestrict=en".format(query_string.replace(" ", "+")))
@@ -8,7 +9,7 @@ def query(query_string, language="en"):
     result = results["items"][0]["volumeInfo"]
     return result
 
-def parse_results(result, verbosity=0):
+def parse_result(result, verbosity=0):
     if verbosity == 0:
         isbn = result["industryIdentifiers"][0]["identifier"]
         title = result["title"] + " - " + result["subtitle"]
@@ -81,6 +82,23 @@ def check_validity(options):
             display_error("Invalid Option: " + option)
     return
 
+def validate_input_path(path):
+    if path.split(".")[-1] != "csv":
+        display_error("This program only supports csv files as input")
+
+    if os.path.exists(path):
+        print("[DEBUG] Input File exists")
+    else:
+        display_error("Input File does not exist")
+        exit()
+
+def read_inputs(path):
+    validate_input_path(path)
+    with open(path) as input_file:
+        inputs = [" ".join(line.replace("\n", "").split(";")) for line in input_file.readlines()]
+    
+    return inputs
+
 def switch_multiple_options(options):
     if options[0] == "-in":
         try:
@@ -113,7 +131,7 @@ def switch_options(options):
         try:
             #print("[DEBUG] Execute query: " + options[1] + " with verbosity " + str(verbosity_level))
             results = query(options[1])
-            results = parse_results(results, verbosity_level)
+            results = parse_result(results, verbosity_level)
             print(results)
             exit()
         except IndexError:
