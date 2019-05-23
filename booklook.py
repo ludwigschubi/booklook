@@ -49,7 +49,7 @@ def check_validity(options):
             display_error("Invalid Option: " + option)
     return
 
-def switch_options(options):
+def switch_multiple_options(options):
     if options[0] == "-in":
         try:
             if options[4] == "-v":
@@ -63,7 +63,12 @@ def switch_options(options):
         results = execute_queries(inputs, verbosity=1)
         write_outputs(results, output_path)
         exit()
+    return
 
+def switch_options(options):
+    if len(options) > 1:
+        switch_multiple_options(options)
+        
     first_options = get_options(options[0])
     check_validity(first_options)
     
