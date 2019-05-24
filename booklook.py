@@ -131,7 +131,8 @@ def display_error(error):
     print(error)
     error_message = """\nUSAGE:
     Synopsis:
-        booklook [-ivc]
+        booklook [-iv]
+        booklook [-cv] KEYWORDS
         booklook [-in PATH] [-out PATH]\n
     Available options:
         -i: Interactive search prompt
