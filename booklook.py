@@ -207,7 +207,6 @@ def get_prompt(verbosity):
         result = parse_result(result, verbosity)
         for key in result:
             print("{}: {}".format(key, result[key]))
-        exit()
 
 def switch_multiple_options(options):
     if options[0] == "-in":
