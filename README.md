@@ -35,7 +35,8 @@ This will execute a keyword search with the given keywords.
 ### From table into table
  - `python3 booklook.py -in PATH_TO_INPUTS -out PATH_TO_OUTPUTS`
  
-This will read keywords from the specified input file and write to a specified output file. At the moment only csv files are supported
+This will read keywords from the specified input file and write to a specified output file. At the moment only csv files are supported. You can test this with:
+ - `python3 booklook.py -in ./test.csv -out ./test\ \(filled\).csv` 
 
 ## Troubleshooting
 
