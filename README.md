@@ -38,6 +38,12 @@ This will execute a keyword search with the given keywords.
 This will read keywords from the specified input file and write to a specified output file. At the moment only csv files are supported. You can test this with:
  - `python3 booklook.py -in ./test.csv -out ./test\ \(filled\).csv` 
 
+### Verbose mode
+All of the previously showcased options can be combined with -v to get the complete output from the Google Books API:
+ - `python3 booklook.py -iv`
+ - `python3 booklook.py -cv`
+ - `python3 booklook.py -in PATH_TO_INPUTS -out PATH_TO_OUTPUTS -v`
+
 ## Troubleshooting
 
 In case your requests are blocked by google's request rate limit you can restart tor while the program is running to get it back up again:
