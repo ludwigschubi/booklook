@@ -1,6 +1,6 @@
 # README
 
-This program was created in the realm of a Library Application for the CODE Library. It is supposed to be used to quickly get metadata about a given book. It uses the Google Books API to do find books.
+This program was created in the realm of a Library Application for the CODE Library. It is supposed to be used to quickly get metadata about a given book. It uses the Google Books API to find books.
 
 ## Installation:
 Make sure you have python 3.6 or higher installed:
