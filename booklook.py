@@ -207,6 +207,7 @@ def get_prompt(verbosity):
         result = parse_result(result, verbosity)
         for key in result:
             print("{}: {}".format(key, result[key]))
+        exit()
 
 def switch_multiple_options(options):
     if options[0] == "-in":
@@ -240,8 +241,9 @@ def switch_options(options):
         try:
             #print("[DEBUG] Execute query: " + options[1] + " with verbosity " + str(verbosity_level))
             results = query(options[1])
-            results = parse_result(results, verbosity_level)
-            print(results)
+            result = parse_result(results, verbosity_level)
+            for key in result:
+                print("{}: {}".format(key, result[key]))
             exit()
         except IndexError:
             display_error("Missing bookname.")
