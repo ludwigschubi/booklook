@@ -1,5 +1,1 @@
-requests
-time
-json
-sys
-os
+requests>=2.22
