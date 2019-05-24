@@ -255,21 +255,10 @@ def switch_options(options):
     display_error("Invalid options")
 
 if __name__ == "__main__":
-    error_message = """Synopsis:
-    booklook [-iv]
-    booklook [-ic] BOOKNAME
-    booklook [-in PATH] [-out PATH] [-v]\n
-    Available options:
-    -i: Interactive search prompt
-    -c: Option for single query execution
-    -v: Verbose query output
-    -in: Option for specifying path of input file
-    -out: Option for specifying output file"""
-
     try:
         options = str(sys.argv[1])
     except IndexError:
-        display_error("Please specify the path to an input file or use the interactive prompt.")
+        display_error("Please specify the path to an input file, a keyword or use the interactive prompt.")
     
     options = sys.argv[1:]
     switch_options(options)
