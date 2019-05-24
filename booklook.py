@@ -1,30 +1,112 @@
 import requests
+import time
 import json
 import sys
 import os
 
 def query(query_string, language="en"):
-    json_response = requests.get("https://www.googleapis.com/books/v1/volumes?q={}&order_by=relevance&langRestrict=en".format(query_string.replace(" ", "+")))
-    results = json.loads(json_response.text)
-    result = results["items"][0]["volumeInfo"]
+    result = ""
+
+    while(result == ""):
+        json_response = requests.get(
+            "https://www.googleapis.com/books/v1/volumes?q={}&order_by=relevance&langRestrict=en".format(query_string.replace(" ", "+")), 
+            proxies={"https": "socks5h://127.0.0.1:9050"}
+        )
+        results = json.loads(json_response.text)
+        try:
+            result = results["items"][0]["volumeInfo"]
+        except KeyError:
+            print("Connection refused trying again in a bit...")
+            time.sleep(10)
+    
     return result
 
-def parse_result(result, verbosity=0):
-    if verbosity == 0:
+def not_found(datapoint, title):
+    print("Couldn't find a " + datapoint + " for " + title)
+    return
+
+def get_title(result):
+    title = result["title"]
+    try: 
+        title += " - " + result["subtitle"]
+    except KeyError:
+        pass
+    return title
+
+
+def get_isbn(result, title):
+    try:
         isbn = result["industryIdentifiers"][0]["identifier"]
-        title = result["title"] + " - " + result["subtitle"]
+    except KeyError:
+        not_found("isbn", title)
+        isbn = ""
+    return isbn
+
+def get_author(result, title):
+    try:
         if len(result["authors"]) > 1:
             author = ", ".join(result["authors"])
         else:
             author = result["authors"][0]
+    except:
+        not_found("authors", title)
+        author = ""
+    return author
+
+def get_publisher(result, title):
+    try:
         publisher = result["publisher"]
+    except KeyError:
+        not_found("publisher", title)
+        publisher = ""
+    return publisher
+
+def get_cover(result, title):
+    try:
         cover = result["imageLinks"]["thumbnail"]
+    except KeyError:
+        not_found("cover", title)
+        cover = ""
+    return cover
+
+def get_topic(result, title):
+    try:
         if len(result["categories"]) > 1:
             topic = " & ".join(result["categories"])
         else:
             topic = result["categories"][0]
+    except KeyError:
+        not_found("category", title)
+        topic = ""
+    return topic
+
+def get_release(result, title):
+    try:
         release_date = result["publishedDate"]
+    except KeyError:
+        not_found("publishing date", title)
+        release_date = ""
+    return release_date
+
+def get_language(result, title):
+    try:
         language = result["language"]
+    except KeyError:
+        not_found("language", title)
+        language = ""
+    return language
+
+def parse_result(result, verbosity=0):
+    if verbosity == 0:
+        title = get_title(result)
+        isbn = get_isbn(result, title)
+        author = get_author(result, title)
+        publisher = get_publisher(result, title)
+        cover = get_cover(result, title)
+        topic = get_topic(result, title)
+        release_date = get_release(result, title)
+        language = get_language(result, title)
+        
         clean_result = {
             "isbn": isbn,
             "title": title,
@@ -65,7 +147,7 @@ def check_for_paths(options):
         input_path = options[1]
     except IndexError:
         display_error("Missing input path")
-        
+
     try:
         if options[2] == "-out":
             output_path = options[3]
@@ -87,7 +169,8 @@ def validate_input_path(path):
         display_error("This program only supports csv files as input")
 
     if os.path.exists(path):
-        print("[DEBUG] Input File exists")
+        #print("[DEBUG] Input File exists")
+        print("Opening input file...")
     else:
         display_error("Input File does not exist")
         exit()
@@ -95,9 +178,35 @@ def validate_input_path(path):
 def read_inputs(path):
     validate_input_path(path)
     with open(path) as input_file:
-        inputs = [" ".join(line.replace("\n", "").split(";")) for line in input_file.readlines()]
-    
+        inputs = [" ".join(line.replace("\n", "").split(";")) for line in input_file.readlines()]    
     return inputs
+
+def write_outputs(results, path):
+    with open(path, "w+") as output_file:
+        for result in results:
+            result_array = [result[key] for key in result]
+            csv_line = ";".join(result_array)
+            output_file.write(csv_line + "\n")
+    print("Finished writing to " + path)
+    return
+
+
+def execute_queries(queries, verbosity):
+    results = []
+    for query_ in queries:
+        single_result = query(query_)
+        single_result = parse_result(single_result, verbosity)
+        results.append(single_result)
+    return results
+
+def get_prompt(verbosity):
+    while(True):
+        print("\nEnter a book you want to search for:")
+        book_name = input()
+        result = query(book_name)
+        result = parse_result(result, verbosity)
+        for key in result:
+            print("{}: {}".format(key, result[key]))
 
 def switch_multiple_options(options):
     if options[0] == "-in":
