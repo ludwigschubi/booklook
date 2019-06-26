@@ -4,21 +4,28 @@ import json
 import sys
 import os
 
-def query(query_string, language="en"):
+def query(query_inputs, language="en"):
+    query_string = " ".join(query_inputs.replace("\n", "").split(";"))
     result = ""
 
     while(result == ""):
         json_response = requests.get(
-            "https://www.googleapis.com/books/v1/volumes?q={}&order_by=relevance&langRestrict=en".format(query_string.replace(" ", "+")), 
-            proxies={"https": "socks5h://127.0.0.1:9050"}
+            "https://www.googleapis.com/books/v1/volumes?q={}&order_by=relevance&langRestrict=en&key=AIzaSyAC70vsA4GJh8ZE_y9yK--lzltZqjQMtE4".format(query_string.replace(" ", "+")), 
         )
+
         results = json.loads(json_response.text)
         try:
             result = results["items"][0]["volumeInfo"]
+            print("Successfully fetched book data!")
         except KeyError:
+            if "totalItems" in results:
+                if results["totalItems"] == 0:
+                    title = query_inputs.replace("\n", "").split(";")[0]
+                    author = query_inputs.replace("\n", "").split(";")[1]
+                    result = {"title": title, "authors": [author]}
             print("Connection refused trying again in a bit...")
-            time.sleep(10)
-    
+            time.sleep(20)
+    time.sleep(3)
     return result
 
 def not_found(datapoint, title):
@@ -39,7 +46,7 @@ def get_isbn(result, title):
         isbn = result["industryIdentifiers"][0]["identifier"]
     except KeyError:
         not_found("isbn", title)
-        isbn = ""
+        isbn = "Not Found"
     return isbn
 
 def get_author(result, title):
@@ -50,7 +57,7 @@ def get_author(result, title):
             author = result["authors"][0]
     except:
         not_found("authors", title)
-        author = ""
+        author = "Not Found"
     return author
 
 def get_publisher(result, title):
@@ -58,7 +65,7 @@ def get_publisher(result, title):
         publisher = result["publisher"]
     except KeyError:
         not_found("publisher", title)
-        publisher = ""
+        publisher = "Not Found"
     return publisher
 
 def get_cover(result, title):
@@ -66,7 +73,7 @@ def get_cover(result, title):
         cover = result["imageLinks"]["thumbnail"]
     except KeyError:
         not_found("cover", title)
-        cover = ""
+        cover = "http://www.newdesignfile.com/postpic/2015/02/no-icon-available_68024.png"
     return cover
 
 def get_topic(result, title):
@@ -77,7 +84,7 @@ def get_topic(result, title):
             topic = result["categories"][0]
     except KeyError:
         not_found("category", title)
-        topic = ""
+        topic = "Not Found"
     return topic
 
 def get_release(result, title):
@@ -85,7 +92,7 @@ def get_release(result, title):
         release_date = result["publishedDate"]
     except KeyError:
         not_found("publishing date", title)
-        release_date = ""
+        release_date = "Not Found"
     return release_date
 
 def get_language(result, title):
@@ -93,7 +100,7 @@ def get_language(result, title):
         language = result["language"]
     except KeyError:
         not_found("language", title)
-        language = ""
+        language = "Not Found"
     return language
 
 def parse_result(result, verbosity=0):
@@ -113,6 +120,7 @@ def parse_result(result, verbosity=0):
             "author": author,
             "publisher": publisher,
             "cover": cover,
+	    "category": "PM",
             "topic": topic,
             "release_date": release_date,
             "language": language
@@ -179,7 +187,7 @@ def validate_input_path(path):
 def read_inputs(path):
     validate_input_path(path)
     with open(path) as input_file:
-        inputs = [" ".join(line.replace("\n", "").split(";")) for line in input_file.readlines()]    
+        inputs = [line for line in input_file.readlines()]    
     return inputs
 
 def write_outputs(results, path):
